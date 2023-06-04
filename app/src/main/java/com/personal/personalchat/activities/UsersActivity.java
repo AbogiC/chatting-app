@@ -4,8 +4,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.QueryDocumentSnapshot;
 import com.personal.personalchat.adapter.UsersAdapter;
@@ -18,7 +16,7 @@ import com.personal.personalchat.utilities.PreferenceManager;
 import java.util.ArrayList;
 import java.util.List;
 
-public class UsersActivity extends AppCompatActivity implements UserListener {
+public class UsersActivity extends BaseActivity implements UserListener {
 
     private ActivityUsersBinding binding;
     private PreferenceManager preferenceManager;
@@ -45,10 +43,10 @@ public class UsersActivity extends AppCompatActivity implements UserListener {
                 .addOnCompleteListener(task -> {
                     loading(false);
                     String currentUserId = preferenceManager.getString(Constants.KEY_USER_ID);
-                    if(task.isSuccessful() && task.getResult() != null) {
+                    if (task.isSuccessful() && task.getResult() != null) {
                         List<User> users = new ArrayList<>();
-                        for(QueryDocumentSnapshot queryDocumentSnapshot : task.getResult()) {
-                            if(currentUserId.equals(queryDocumentSnapshot.getId())) {
+                        for (QueryDocumentSnapshot queryDocumentSnapshot : task.getResult()) {
+                            if (currentUserId.equals(queryDocumentSnapshot.getId())) {
                                 continue;
                             }
                             User user = new User();
@@ -59,7 +57,7 @@ public class UsersActivity extends AppCompatActivity implements UserListener {
                             user.id = queryDocumentSnapshot.getId();
                             users.add(user);
                         }
-                        if(users.size() > 0) {
+                        if (users.size() > 0) {
                             UsersAdapter usersAdapter = new UsersAdapter(users, this);
                             binding.usersRecyclerView.setAdapter(usersAdapter);
                             binding.usersRecyclerView.setVisibility(View.VISIBLE);
@@ -78,7 +76,7 @@ public class UsersActivity extends AppCompatActivity implements UserListener {
     }
 
     private void loading(Boolean isLoading) {
-        if(isLoading) {
+        if (isLoading) {
             binding.progressBar.setVisibility(View.VISIBLE);
         } else {
             binding.progressBar.setVisibility(View.INVISIBLE);

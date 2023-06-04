@@ -6,8 +6,6 @@ import android.os.Bundle;
 import android.util.Base64;
 import android.view.View;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.firebase.firestore.DocumentChange;
 import com.google.firebase.firestore.DocumentReference;
@@ -29,8 +27,9 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
-public class ChatActivity extends AppCompatActivity {
+public class ChatActivity extends BaseActivity {
 
     private ActivityChatBinding binding;
     private User receiverUser;
@@ -39,6 +38,7 @@ public class ChatActivity extends AppCompatActivity {
     private PreferenceManager preferenceManager;
     private FirebaseFirestore database;
     private String conversionId = null;
+    private Boolean isReceiverAvailable = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,7 +70,7 @@ public class ChatActivity extends AppCompatActivity {
         message.put(Constants.KEY_MESSAGE, binding.inputMessage.getText().toString());
         message.put(Constants.KEY_TIMESTAMP, new Date());
         database.collection(Constants.KEY_COLLECTION_CHAT).add(message);
-        if(conversionId != null) {
+        if (conversionId != null) {
             updateConversion(binding.inputMessage.getText().toString());
         } else {
             HashMap<String, Object> conversion = new HashMap<>();
@@ -87,6 +87,29 @@ public class ChatActivity extends AppCompatActivity {
         binding.inputMessage.setText(null);
     }
 
+    private void listenAvailabilityOfReceiver() {
+        database.collection(Constants.KEY_COLLECTION_USERS).document(
+                receiverUser.id
+        ).addSnapshotListener(ChatActivity.this, ((value, error) -> {
+            if (error != null) {
+                return;
+            }
+            if (value != null) {
+                if (value.getLong(Constants.KEY_AVAILABILITY) != null) {
+                    int availability = Objects.requireNonNull(
+                            value.getLong(Constants.KEY_AVAILABILITY)
+                    ).intValue();
+                    isReceiverAvailable = availability == 1;
+                }
+            }
+            if (isReceiverAvailable) {
+                binding.textAvailability.setVisibility(View.VISIBLE);
+            } else {
+                binding.textAvailability.setVisibility(View.GONE);
+            }
+        }));
+    }
+
     private void listenMessages() {
         database.collection(Constants.KEY_COLLECTION_CHAT)
                 .whereEqualTo(Constants.KEY_SENDER_ID, preferenceManager.getString(Constants.KEY_USER_ID))
@@ -99,13 +122,13 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private final EventListener<QuerySnapshot> eventListener = (value, error) -> {
-        if(error != null) {
+        if (error != null) {
             return;
         }
-        if(value != null) {
+        if (value != null) {
             int count = chatMessages.size();
-            for(DocumentChange documentChange : value.getDocumentChanges()) {
-                if(documentChange.getType() == DocumentChange.Type.ADDED) {
+            for (DocumentChange documentChange : value.getDocumentChanges()) {
+                if (documentChange.getType() == DocumentChange.Type.ADDED) {
                     ChatMessage chatMessage = new ChatMessage();
                     chatMessage.senderId = documentChange.getDocument().getString(Constants.KEY_SENDER_ID);
                     chatMessage.receiverId = documentChange.getDocument().getString(Constants.KEY_RECEIVER_ID);
@@ -116,7 +139,7 @@ public class ChatActivity extends AppCompatActivity {
                 }
             }
             Collections.sort(chatMessages, (obj1, obj2) -> obj1.dateObject.compareTo(obj2.dateObject));
-            if(count == 0) {
+            if (count == 0) {
                 chatAdapter.notifyDataSetChanged();
             } else {
                 chatAdapter.notifyItemRangeInserted(chatMessages.size(), chatMessages.size());
@@ -125,7 +148,7 @@ public class ChatActivity extends AppCompatActivity {
             binding.chatRecyclerView.setVisibility(View.VISIBLE);
         }
         binding.progressBar.setVisibility(View.GONE);
-        if(conversionId == null) {
+        if (conversionId == null) {
             checkForConversion();
         }
     };
@@ -165,7 +188,7 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private void checkForConversion() {
-        if(chatMessages.size() != 0) {
+        if (chatMessages.size() != 0) {
             checkForConversionRemotely(
                     preferenceManager.getString(Constants.KEY_USER_ID),
                     receiverUser.id
@@ -186,9 +209,15 @@ public class ChatActivity extends AppCompatActivity {
     }
 
     private final OnCompleteListener<QuerySnapshot> conversionOnCompleteListener = task -> {
-        if(task.isSuccessful() && task.getResult() != null && task.getResult().getDocuments().size() > 0) {
+        if (task.isSuccessful() && task.getResult() != null && task.getResult().getDocuments().size() > 0) {
             DocumentSnapshot documentSnapshot = task.getResult().getDocuments().get(0);
             conversionId = documentSnapshot.getId();
         }
     };
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        listenAvailabilityOfReceiver();
+    }
 }

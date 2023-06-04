@@ -8,8 +8,6 @@ import android.util.Base64;
 import android.view.View;
 import android.widget.Toast;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import com.google.firebase.firestore.DocumentChange;
 import com.google.firebase.firestore.DocumentReference;
 import com.google.firebase.firestore.EventListener;
@@ -30,7 +28,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity implements ConversionListener {
+public class MainActivity extends BaseActivity implements ConversionListener {
 
     private ActivityMainBinding binding;
     private PreferenceManager preferenceManager;
@@ -86,18 +84,18 @@ public class MainActivity extends AppCompatActivity implements ConversionListene
     }
 
     private final EventListener<QuerySnapshot> eventListener = (value, error) -> {
-        if(error != null) {
+        if (error != null) {
             return;
         }
-        if(value != null) {
-            for(DocumentChange documentChange : value.getDocumentChanges()) {
-                if(documentChange.getType() == DocumentChange.Type.ADDED) {
+        if (value != null) {
+            for (DocumentChange documentChange : value.getDocumentChanges()) {
+                if (documentChange.getType() == DocumentChange.Type.ADDED) {
                     String senderId = documentChange.getDocument().getString(Constants.KEY_SENDER_ID);
                     String receiverId = documentChange.getDocument().getString(Constants.KEY_RECEIVER_ID);
                     ChatMessage chatMessage = new ChatMessage();
                     chatMessage.senderId = senderId;
                     chatMessage.receiverId = receiverId;
-                    if(preferenceManager.getString(Constants.KEY_USER_ID).equals(senderId)) {
+                    if (preferenceManager.getString(Constants.KEY_USER_ID).equals(senderId)) {
                         chatMessage.conversionImage = documentChange.getDocument().getString(Constants.KEY_RECEIVER_IMAGE);
                         chatMessage.conversionName = documentChange.getDocument().getString(Constants.KEY_RECEIVER_NAME);
                         chatMessage.conversionId = documentChange.getDocument().getString(Constants.KEY_RECEIVER_ID);
@@ -109,11 +107,11 @@ public class MainActivity extends AppCompatActivity implements ConversionListene
                     chatMessage.message = documentChange.getDocument().getString(Constants.KEY_LAST_MESSAGE);
                     chatMessage.dateObject = documentChange.getDocument().getDate(Constants.KEY_TIMESTAMP);
                     conversations.add(chatMessage);
-                } else if(documentChange.getType() == DocumentChange.Type.MODIFIED) {
-                    for(int i = 0; i < conversations.size(); i++) {
+                } else if (documentChange.getType() == DocumentChange.Type.MODIFIED) {
+                    for (int i = 0; i < conversations.size(); i++) {
                         String senderId = documentChange.getDocument().getString(Constants.KEY_SENDER_ID);
                         String receiverId = documentChange.getDocument().getString(Constants.KEY_RECEIVER_ID);
-                        if(conversations.get(i).senderId.equals(senderId) && conversations.get(i).receiverId.equals(receiverId)) {
+                        if (conversations.get(i).senderId.equals(senderId) && conversations.get(i).receiverId.equals(receiverId)) {
                             conversations.get(i).message = documentChange.getDocument().getString(Constants.KEY_LAST_MESSAGE);
                             conversations.get(i).dateObject = documentChange.getDocument().getDate(Constants.KEY_TIMESTAMP);
                             break;
