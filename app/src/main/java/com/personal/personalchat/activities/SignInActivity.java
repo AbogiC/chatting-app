@@ -1,11 +1,10 @@
 package com.personal.personalchat.activities;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.content.Intent;
 import android.os.Bundle;
 
-import com.personal.personalchat.R;
+import androidx.appcompat.app.AppCompatActivity;
+
 import com.personal.personalchat.databinding.ActivitySignInBinding;
 
 public class SignInActivity extends AppCompatActivity {
