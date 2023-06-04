@@ -1,8 +1,10 @@
-package com.personal.personalchat;
+package com.personal.personalchat.activities;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.os.Bundle;
+
+import com.personal.personalchat.R;
 
 public class MainActivity extends AppCompatActivity {
 
